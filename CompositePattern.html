@@ -1,0 +1,167 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="form">
+
+  </div>
+</body>
+<script>
+// Composite Form
+
+var CompositeForm = function (id, method, action) {
+  // implements Composite, FormItem
+  this.formComponents = [];
+  this.element = document.createElement('form');
+  this.element.id = id;
+  this.element.method = method || 'POST';
+  this.element.action = action || '#';
+  document.getElementById("form").append(this.element);
+};
+CompositeForm.prototype.add = function (child) {
+  // Interface.ensureImplements(child, Composite, FormItem);
+  this.formComponents.push(child);
+  this.element.appendChild(child.getElement());
+};
+
+CompositeForm.prototype.remove = function (child) {
+  for (var i = 0, len = this.formComponents.length; i < len; i++) {
+    if (this.formComponents[i] === child) {
+      this.formComponents.splice(i, 1); // Remove one element from the array at
+      // position i.
+      break;
+    }
+  }
+};
+CompositeForm.prototype.getChild = function (i) {
+  return this.formComponents[i];
+};
+
+CompositeForm.prototype.getChildWithId = function (i) {
+  return this.formComponents.find(({id})=>{
+    return id==i
+  });
+};
+CompositeForm.prototype.save = function () {
+  for (var i = 0, len = this.formComponents.length; i < len; i++) {
+    this.formComponents[i].save();
+  }
+};
+CompositeForm.prototype.getElement = function () {
+  return this.element;
+};
+
+CompositeForm.prototype.getAllElementValues = function () {
+  for (var i = 0, len = this.formComponents.length; i < len; i++) {
+    console.log(this.formComponents[i].getValue());
+  }
+};
+
+CompositeForm.prototype.validateElement = function(options){
+  for (var i = 0, len = this.formComponents.length; i < len; i++) {
+    this.formComponents[i].validateElement(options)
+  }
+}
+
+var Field = function (id) {
+  // implements Composite, FormItem
+  this.id = id;
+  this.element;
+};
+Field.prototype.add = function () {};
+Field.prototype.remove = function () {};
+Field.prototype.getChild = function () {};
+Field.prototype.save = function () {
+  setCookie(this.id, this.getValue);
+};
+
+Field.prototype.getElement = function() {
+return this.element;
+};
+Field.prototype.getValue = function() {
+throw new Error('Unsupported operation on the class Field.');
+};
+
+// Field.prototype.validateElement = function(options) {
+//   if(options?.required==true){
+//     console.log("required");
+//   }
+// };
+
+/* Extend function. InputField, Field */
+function extend(subClass, superClass) {
+  var F = function () {};
+  F.prototype = superClass.prototype;
+  console.log(F.prototype, new F());
+  subClass.prototype = new F();
+  subClass.prototype.constructor = subClass;
+}
+
+// Input Field
+
+var InputField = function (id, label) {
+  // implements Composite, FormItem
+  Field.call(this, id);
+  this.input = document.createElement('input');
+  this.input.id = id;
+  this.label = document.createElement('label');
+  var labelTextNode = document.createTextNode(label);
+  this.label.appendChild(labelTextNode);
+  this.element = document.createElement('div');
+  this.element.className = 'input-field';
+  this.element.appendChild(this.label);
+  this.element.appendChild(this.input);
+};
+extend(InputField, Field); // Inherit from Field.
+InputField.prototype.getValue = function () {
+  return this.input.value;
+};
+
+var SelectField = function(id, label, values) { // implements Composite, FormItem
+Field.call(this, id);
+this.select = document.createElement('select');
+this.select.id = id;
+this.label = document.createElement('label');
+var labelTextNode = document.createTextNode(label);
+this.label.appendChild(labelTextNode);
+this.element = document.createElement('div');
+this.element.className = 'input-field';
+this.element.appendChild(this.label);
+this.element.appendChild(this.select);
+for(let i=0; i<values.length;i++){
+  const option= document.createElement('option');
+  option.value=values[i];
+  option.innerText=values[i];
+  this.select.appendChild(option);
+}
+};
+extend(SelectField, Field); // Inherit from Field.
+SelectField.prototype.getValue = function() {
+return this.select.options[this.select.selectedIndex].value;
+};
+
+SelectField.prototype.validate = function(options) {
+  if(options?.required==true){
+    this.select.options[this.select.selectedIndex].value===''? console.log("required") : null;
+  }
+
+};
+
+var contactForm = new CompositeForm('contact-form', 'POST', '#');
+contactForm.add(new InputField('first-name', 'First Name'));
+contactForm.add(new InputField('first-name2', 'include validation:'));
+contactForm.add(new InputField('first-name3', 'include validation:'));
+contactForm.add(new InputField('first-name4', 'First Name'));
+
+contactForm.add(new SelectField('iller','il listesi',['','Ankara','Istanbul']))
+</script>
+</html>
